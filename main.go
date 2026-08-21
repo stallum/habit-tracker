@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"log"
+
+	// "github.com/stallum/habit-tracker/internal/store"
+	"habit-tracker/internal/store"
 
 	tea "charm.land/bubbletea/v2"
 )
@@ -31,9 +34,29 @@ func (m model) View() tea.View {
 }
 
 func main() {
-	p := tea.NewProgram(model{message: "Olá! Aperte \"q\" para sair.\n"})
-	if _, err := p.Run(); err != nil {
-		fmt.Fprintln(os.Stderr, "erro:", err)
-		os.Exit(1)
+	s, err := store.Open("habits.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer s.Close()
+
+	h, err := s.CreateHabit("Beber Água")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Criado: %+v\n", h)
+
+	habits, err := s.ListHabits()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, h := range habits {
+		fmt.Printf(
+			"- [%d] %s (Criado em %s)\n",
+			h.ID,
+			h.Name,
+			h.CreatedAt.Format("02/01/2006"),
+		)
 	}
 }
